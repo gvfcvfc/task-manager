@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Task Manager</title>
+</head>
+<body>
+  <h1>Task Manager</h1>
+
+  <h3>Auth</h3>
+  <input id="username" placeholder="username">
+  <input id="password" type="password" placeholder="password">
+  <button onclick="register()">Register</button>
+  <button onclick="login()">Login</button>
+
+  <h3>Add Task</h3>
+  <input id="title" placeholder="task title">
+  <button onclick="addTask()">Add</button>
+
+  <h3>Tasks</h3>
+  <ul id="taskList"></ul>
+
+<script>
+const API = "https://task-manager-production-0879.up.railway.app";
+let token = "";
+
+async function register() {
+  await fetch(API + "/register", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: username.value,
+      password: password.value
+    })
+  });
+  alert("Registered");
+}
+
+async function login() {
+  const res = await fetch(API + "/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: username.value,
+      password: password.value
+    })
+  });
+  const data = await res.json();
+  token = data.access_token;
+  loadTasks();
+}
+
+async function loadTasks() {
+  const res = await fetch(API + "/tasks", {
+    headers: { Authorization: "Bearer " + token }
+  });
+  const tasks = await res.json();
+
+  taskList.innerHTML = "";
+
+  tasks.forEach(t => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      ${t.completed ? "✅" : "⬜"} ${t.title}
+      <button onclick="toggleTask(${t.id})">Toggle</button>
+      <button onclick="deleteTask(${t.id})">Delete</button>
+    `;
+    taskList.appendChild(li);
+  });
+}
+
+async function addTask() {
+  await fetch(API + "/tasks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ title: title.value })
+  });
+  title.value = "";
+  loadTasks();
+}
+
+async function toggleTask(id) {
+  await fetch(API + "/tasks/" + id, {
+    method: "PUT",
+    headers: { Authorization: "Bearer " + token }
+  });
+  loadTasks();
+}
+
+async function deleteTask(id) {
+  await fetch(API + "/tasks/" + id, {
+    method: "DELETE",
+    headers: { Authorization: "Bearer " + token }
+  });
+  loadTasks();
+}
+</script>
+
+</body>
+</html>

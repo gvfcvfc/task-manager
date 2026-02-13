@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+      FLASK_APP: main:app
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/tasksdb
+    depends_on:
+      - db
+    command: flask run --host=0.0.0.0 --port=5000
+
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tasksdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
